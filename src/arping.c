@@ -683,6 +683,9 @@ static void drop_seccomp(int libnet_fd)
         seccomp_allow(ctx, "newfstatat");
         seccomp_allow(ctx, "exit_group");
         seccomp_allow(ctx, "rt_sigreturn");
+#if HAVE_SECCOMP_SYSCALL_clock_gettime64
+        seccomp_allow(ctx, "clock_gettime64");
+#endif
 
         // Load.
         if (seccomp_load(ctx)) {
