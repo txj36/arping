@@ -25,3 +25,10 @@ src/arping
 src/fuzz_pingip
 stamp-h1
 test-driver
+src/arping_fuzz
+src/arping_test
+src/arping_test.log
+src/arping_test.trs
+src/test-suite.log
+*.pcap
+*.tgz
