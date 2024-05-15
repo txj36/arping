@@ -213,7 +213,6 @@ seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS($1), 0);
 
 CHECK_SECCOMP_SYSCALL([fstat]);
 CHECK_SECCOMP_SYSCALL([statx]);
-CHECK_SECCOMP_SYSCALL([clock_gettime64]);
 CHECK_SECCOMP_SYSCALL([nonexistent]);
 
 AC_CONFIG_FILES([Makefile])

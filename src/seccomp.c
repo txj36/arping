@@ -14,15 +14,32 @@
 
 
 #if !USE_SECCOMP
-#error foo
+void drop_seccomp(int libnet_fd)
+{
+        if (verbose > 2) {
+                printf("arping: seccomp support not built in, skipping\n");
+        }
+}
 #else
 #include <seccomp.h>
 
 static void seccomp_allow(scmp_filter_ctx ctx, const char* name)
 {
-        if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, seccomp_syscall_resolve_name(name), 0)) {
+        const int resolved = seccomp_syscall_resolve_name(name);
+        if (resolved == __NR_SCMP_ERROR) {
                 if (verbose) {
-                        fprintf(stderr, "arping: seccomp_rule_add_exact(%s): %s",
+                        fprintf(stderr,
+                                "arping: seccomp can't resolve syscall %s:"
+                                " skipping allowing that\n"
+                                "arping: If arping fails, retry with -Z\n",
+                                name);
+                }
+                return;
+        }
+        if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, resolved, 0)) {
+                if (verbose) {
+                        fprintf(stderr,
+                                "arping: seccomp_rule_add_exact(%s): %s\n",
                                 name, strerror(errno));
                 }
         }
@@ -79,9 +96,7 @@ void drop_seccomp(int libnet_fd)
         seccomp_allow(ctx, "newfstatat");
         seccomp_allow(ctx, "exit_group");
         seccomp_allow(ctx, "rt_sigreturn");
-#if HAVE_SECCOMP_SYSCALL_clock_gettime64
         seccomp_allow(ctx, "clock_gettime64");
-#endif
 
         // Load.
         if (seccomp_load(ctx)) {
@@ -94,3 +109,11 @@ void drop_seccomp(int libnet_fd)
         }
 }
 #endif
+/* ---- Emacs Variables ----
+ * Local Variables:
+ * c-basic-offset: 8
+ * indent-tabs-mode: nil
+ * End:
+ *
+ * vim: ts=8 sw=8
+ */
