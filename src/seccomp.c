@@ -14,7 +14,8 @@
 
 
 #if !USE_SECCOMP
-void drop_seccomp(int libnet_fd)
+void
+drop_seccomp(int libnet_fd)
 {
         if (verbose > 2) {
                 printf("arping: seccomp support not built in, skipping\n");
@@ -23,7 +24,15 @@ void drop_seccomp(int libnet_fd)
 #else
 #include <seccomp.h>
 
-static void seccomp_allow(scmp_filter_ctx ctx, const char* name)
+/**
+ * Allow syscall by name.
+ *
+ * If there's no such syscall, that's fine.
+ *
+ * If allowing this syscall fails, then log verbose error.
+ */
+static void
+seccomp_allow(scmp_filter_ctx ctx, const char* name)
 {
         const int resolved = seccomp_syscall_resolve_name(name);
         if (resolved == __NR_SCMP_ERROR) {
@@ -45,7 +54,37 @@ static void seccomp_allow(scmp_filter_ctx ctx, const char* name)
         }
 }
 
-void drop_seccomp(int libnet_fd)
+/**
+ * Allow syscall by name if first arg is the given file descriptor.
+ *
+ * If there's no such syscall, that's fine.
+ *
+ * If allowing this syscall fails, then print warning to stderr. It's write(),
+ * so this has to work.
+ */
+static void
+seccomp_allow_fd(scmp_filter_ctx ctx, const char* name, int fd)
+{
+        const int resolved = seccomp_syscall_resolve_name(name);
+        if (resolved == __NR_SCMP_ERROR) {
+                if (verbose) {
+                        fprintf(stderr,
+                                "arping: seccomp can't resolve syscall %s:"
+                                " skipping allowing that\n"
+                                "arping: If arping fails, retry with -Z\n",
+                                name);
+                }
+                return;
+        }
+        if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, resolved, 1,
+                             SCMP_A0(SCMP_CMP_EQ, fd))) {
+                fprintf(stderr, "arping: seccomp_rule_add(%s for fd %d)",
+                        name, fd);
+        }
+}
+
+void
+drop_seccomp(int libnet_fd)
 {
         //scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_ERRNO(13));
         scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
@@ -57,28 +96,11 @@ void drop_seccomp(int libnet_fd)
         //
         // Whitelist.
         //
-
-        // Write to stdout and stderr.
-#if HAVE_SECCOMP_SYSCALL_statx
-        if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(statx), 1, SCMP_A0(SCMP_CMP_EQ, STDOUT_FILENO))) {
-                perror("seccomp_rule_add(statx stdout)");
-                exit(1);
-        }
-#endif
-#if HAVE_SECCOMP_SYSCALL_fstat
-        if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fstat), 1, SCMP_A0(SCMP_CMP_EQ, STDOUT_FILENO))) {
-                perror("seccomp_rule_add(fstat stdout)");
-                exit(1);
-        }
-#endif
-        if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, STDOUT_FILENO))) {
-                perror("seccomp_rule_add(write stdout)");
-                exit(1);
-        }
-        if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, STDERR_FILENO))) {
-                perror("seccomp_rule_add(write stderr)");
-                exit(1);
-        }
+        // Stat and write to stdout and stderr.
+        seccomp_allow_fd(ctx, "statx", STDOUT_FILENO);
+        seccomp_allow_fd(ctx, "fstat", STDOUT_FILENO);
+        seccomp_allow_fd(ctx, "write", STDOUT_FILENO);
+        seccomp_allow_fd(ctx, "write", STDERR_FILENO);
 
         // Libnet.
         if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(ioctl), 1, SCMP_A0(SCMP_CMP_EQ, cast_int_uint(libnet_fd, NULL)))) {
