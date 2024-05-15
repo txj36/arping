@@ -25,6 +25,12 @@
 #include <inttypes.h>
 #endif
 
+#if defined(HAVE_SECCOMP_H) && defined(HAVE_LIBSECCOMP)
+#define USE_SECCOMP 1
+#else
+#define USE_SECCOMP 0
+#endif
+
 /* Forward declarations */
 struct pcap_pkthdr;
 
@@ -34,6 +40,7 @@ extern uint32_t dstip;
 extern unsigned int numrecvd;
 extern unsigned int numsent;
 
+void drop_seccomp(int libnet_fd);
 const char *
 arping_lookupdev(uint32_t srcip, uint32_t dstip, char *ebuf);
 void do_signal_init(void);
