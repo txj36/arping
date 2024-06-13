@@ -33,11 +33,19 @@ setup() {
 }
 
 run_test() {
+    setup
+
     DO_CAPTURE=yes
     if [[ "$1" = "-t" ]]; then
 	DO_CAPTURE=no
 	shift
     fi
+
+    if [[ "$1" = "-i" ]]; then
+	ip netns exec arping_test1 sysctl -w net.ipv4.icmp_echo_ignore_broadcasts=0
+	shift
+    fi
+
     NAME="$1"
     shift
     ECODE="$1"
@@ -101,6 +109,7 @@ run_test() {
 	diff -Nu "tests/${NAME?}.cap" "${TXT?}" || (echo "FAIL ${TXT?}"; exit 1)
 	rm "${CAP?}"
     fi
+    cleanup
 }
 
 cleanup() {
@@ -122,10 +131,7 @@ run_tests() {
     # Simple MAC examples.
     run_test -t "simplemac_timeout"   1 -c 1 -i veth0 00:01:02:33:44:01
     run_test -t "simplemac_target"    0 -c 1 -T 192.0.2.101 00:01:02:33:44:01
-
-    ip netns exec arping_test1 sysctl -w net.ipv4.icmp_echo_ignore_broadcasts=0
-    run_test -t "simplemac_noignore"    0 -c 1 -i veth0 00:01:02:33:44:01
-    ip netns exec arping_test1 sysctl -w net.ipv4.icmp_echo_ignore_broadcasts=1
+    run_test -t -i "simplemac_noignore"    0 -c 1 -i veth0 00:01:02:33:44:01
 
     # TODO: ping mac address.
 
@@ -178,10 +184,7 @@ run_tests() {
 main() {
     cd "$(dirname $0)/.."
     SLEEP="${1:-0.1}"
-    setup
-
     run_tests
-    cleanup
 
     echo "All OK"
 }
