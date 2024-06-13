@@ -55,6 +55,9 @@ run_test() {
        &
     PID=$!
 
+    # wait for tcpdump to wake up.
+    sleep 10
+
     # Run arping.
     set +e
     # TODO: test that errors go to stderr.
@@ -80,9 +83,9 @@ run_test() {
 	exit 1
     fi
     
-    sleep 0.05
+    sleep 10
     kill -INT "${PID?}"
-    sleep 0.1
+    sleep 10
     kill -9 "${PID?}" || true
     wait "${PID?}" || true
 
