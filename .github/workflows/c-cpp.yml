@@ -37,3 +37,5 @@ jobs:
       run:  make check
     - name: make distcheck with optional deps
       run:  make distcheck
+    - name: end to end tests
+      run:  sudo ./tests/run
