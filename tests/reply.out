@@ -1,5 +1,5 @@
 ARPING 192[.]0[.]2[.]101
-Timeout
+Sending ARP reply
 
 --- 192[.]0[.]2[.]101 statistics ---
 1 packets transmitted, 0 packets received, 100% unanswered \(0 extra\)

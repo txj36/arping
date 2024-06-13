@@ -188,6 +188,9 @@ static uint8_t dstmac[ETH_ALEN];
 static char* payload_suffix = NULL;
 static size_t payload_suffix_size = 4;
 
+/* If there were any libnet write failures, we return error. */
+static size_t libnet_write_failures = 0;
+
 uint32_t srcip;                   /* autodetected, override with -S/-b/-0 */
 uint8_t srcmac[ETH_ALEN];         /* autodetected, override with -s */
 
@@ -1342,6 +1345,7 @@ pingmac_send(uint16_t id, uint16_t seq)
         if (-1 == libnet_write(libnet)) {
 		fprintf(stderr, "arping: libnet_write(): %s\n",
 			libnet_geterror(libnet));
+                libnet_write_failures++;
 		sigint(0);
 	}
         getclock(&lastpacketsent);
@@ -1414,9 +1418,13 @@ pingip_send()
                        (long)lastpacketsent.tv_sec,
                        (long)lastpacketsent.tv_nsec);
 	}
+        if (send_reply) {
+                printf("Sending ARP reply\n");
+        }
 	if (-1 == libnet_write(libnet)) {
 		fprintf(stderr, "arping: libnet_write(): %s\n",
 			libnet_geterror(libnet));
+                libnet_write_failures++;
 		sigint(0);
 	}
         getclock(&lastpacketsent);
@@ -1838,6 +1846,14 @@ ping_recv(pcap_t *pcap, uint32_t packetwait, pcap_handler func)
        char done = 0;
        int fd;
        unsigned int old_received;
+
+       if (send_reply) {
+               if (verbose > 3) {
+                       printf("arping: sending replies. Waiting %d us…\n");
+               }
+               usleep(packetwait);
+               return;
+       }
 
        if (verbose > 3) {
                printf("arping: receiving packets...\n");
@@ -2656,7 +2672,13 @@ arping_main(int argc, char **argv)
         if (finddup) {
                 return dupfound;
         }
-        return !numrecvd;
+        if (libnet_write_failures > 0) {
+                return EXIT_FAILURE;
+        }
+        if ((numrecvd > 0) || send_reply) {
+                return EXIT_SUCCESS;
+        }
+        return EXIT_FAILURE;
 }
 /* ---- Emacs Variables ----
  * Local Variables:
