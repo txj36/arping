@@ -88,7 +88,7 @@ run_test() {
 
     TXT="$(mktemp)"
     chown root:root "${CAP?}"
-    tcpdump -txnlpr "${CAP?}" 2>/dev/null > "${TXT?}"
+    tcpdump -txnlpr "${CAP?}" > "${TXT?}"
     diff -Nu "tests/${NAME?}.cap" "${TXT?}" || (echo "FAIL ${TXT?}"; exit 1)
     rm "${CAP?}"
 }
