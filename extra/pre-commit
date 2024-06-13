@@ -3,4 +3,5 @@
 set -e
 make
 make check
-exec make distcheck
+make distcheck
+sudo sudo ./tests/run
