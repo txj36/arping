@@ -126,13 +126,14 @@ run_test "bad_count"   1 -c -1 192.0.2.101
 # TODO: -i
 # TODO: -m
 # TODO: -p
-# TODO: -P
-# TODO: -q
-# TODO: -Q
 
+# -P
 run_test "reply"             0 -c 1 -P    192.0.2.101
 run_test "unsolicited_reply" 0 -c 1 -P -U 192.0.2.101
 
+# TODO: -q
+# TODO: -Q
+# TODO: -r
 # TODO: -R
 # TODO: -s
 # TODO: -S
