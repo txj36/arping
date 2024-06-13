@@ -84,7 +84,7 @@ run_test() {
     kill -INT "${PID?}"
     sleep 0.1
     kill -9 "${PID?}" || true
-    wait "${PID?}"
+    wait "${PID?}" || true
 
     TXT="$(mktemp)"
     chown root:root "${CAP?}"
