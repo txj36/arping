@@ -3,7 +3,7 @@
 import re
 import sys
 
-rdata = '^' + open(sys.argv[1]).read() + '$'
+rdata = '\A' + open(sys.argv[1]).read() + '\Z'
 r = re.compile(rdata, re.MULTILINE | re.DOTALL)
 
 data = sys.stdin.read()
