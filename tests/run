@@ -33,6 +33,11 @@ setup() {
 }
 
 run_test() {
+    DO_CAPTURE=yes
+    if [[ "$1" = "-t" ]]; then
+	DO_CAPTURE=no
+	shift
+    fi
     NAME="$1"
     shift
     ECODE="$1"
@@ -42,21 +47,22 @@ run_test() {
     echo "     Test: ${NAME?}"
     echo "-----------------------------"
     
-    
-    CAP="$(mktemp)"
-    # TODO: in the future also capture icmp. But we need regex matching for that.
-    ip netns exec arping_test1 \
-       tcpdump \
-       -s0 \
-       -nlpi veth1 \
-       --immediate-mode \
-       -w "${CAP?}" \
-       arp \
-       &
-    PID=$!
+    if [[ "${DO_CAPTURE?}" = "yes" ]]; then
+	CAP="$(mktemp)"
+	# TODO: in the future also capture icmp. But we need regex matching for that.
+	ip netns exec arping_test1 \
+	   tcpdump \
+	   -s0 \
+	   -nlpi veth1 \
+	   --immediate-mode \
+	   -w "${CAP?}" \
+	   arp \
+	   &
+        PID=$!
+        # wait for tcpdump to wake up.
+        sleep "${SLEEP?}"
+    fi
 
-    # wait for tcpdump to wake up.
-    sleep "${SLEEP?}"
 
     # Run arping.
     set +e
@@ -83,16 +89,18 @@ run_test() {
 	exit 1
     fi
 
-    # Wait for tcpdump to see the packets.
-    sleep "${SLEEP?}"
-    kill -INT "${PID?}"
-    wait "${PID?}" || true
+    if [[ "${DO_CAPTURE?}" = "yes" ]]; then
+	# Wait for tcpdump to see the packets.
+	sleep "${SLEEP?}"
+	kill -INT "${PID?}"
+	wait "${PID?}" || true
 
-    TXT="$(mktemp)"
-    chown root:root "${CAP?}"
-    tcpdump -txnlpr "${CAP?}" > "${TXT?}"
-    diff -Nu "tests/${NAME?}.cap" "${TXT?}" || (echo "FAIL ${TXT?}"; exit 1)
-    rm "${CAP?}"
+	TXT="$(mktemp)"
+	chown root:root "${CAP?}"
+	tcpdump -txnlpr "${CAP?}" > "${TXT?}"
+	diff -Nu "tests/${NAME?}.cap" "${TXT?}" || (echo "FAIL ${TXT?}"; exit 1)
+	rm "${CAP?}"
+    fi
 }
 
 cleanup() {
@@ -112,11 +120,11 @@ run_tests() {
     run_test "no_reply"            1 -c 1 192.0.2.1
 
     # Simple MAC examples.
-    run_test "simplemac_timeout"   1 -c 1 -i veth0 00:01:02:33:44:01
-    run_test "simplemac_target"    0 -c 1 -T 192.0.2.101 00:01:02:33:44:01
+    run_test -t "simplemac_timeout"   1 -c 1 -i veth0 00:01:02:33:44:01
+    run_test -t "simplemac_target"    0 -c 1 -T 192.0.2.101 00:01:02:33:44:01
 
     ip netns exec arping_test1 sysctl -w net.ipv4.icmp_echo_ignore_broadcasts=0
-    run_test "simplemac_noignore"    0 -c 1 -i veth0 00:01:02:33:44:01
+    run_test -t "simplemac_noignore"    0 -c 1 -i veth0 00:01:02:33:44:01
     ip netns exec arping_test1 sysctl -w net.ipv4.icmp_echo_ignore_broadcasts=1
 
     # TODO: ping mac address.
