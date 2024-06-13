@@ -53,6 +53,10 @@ Systems that it should still work on, but I don't personally regularly test:
 * OpenBSD sparc64 (last test: 2009-10-02)
 * Solaris
 
+Contributing
+------------
+Please run `make check` and `sudo ./tests/run` before creating a PR.
+
 Mailing list
 ------------
 Check out http://www.habets.pp.se/synscan/mailinglists.php for information

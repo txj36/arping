@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+#
+# Set up a virtual environment in a network namespace, and run arping
+# in that controlled environment.
+#
+# This needs to run as root, since it creates network namespaces and
+# virtual ethernet devices.
+#
+
+set -e
+set -o pipefail
+
+cd "$(dirname $0)/.."
+
+ip netns del arping_test0 2>/dev/null || true
+ip netns del arping_test1 2>/dev/null  || true
+
+ip netns add arping_test0
+ip netns add arping_test1
+
+ip link add veth0 type veth peer name veth1
+
+ip link set veth0 netns arping_test0
+ip link set veth1 netns arping_test1
+
+ip netns exec arping_test0 ip l set up veth0
+ip netns exec arping_test1 ip l set up veth1
+
+ip netns exec arping_test0 ip l set dev veth0 address 00:01:02:33:44:00
+ip netns exec arping_test1 ip l set dev veth1 address 00:01:02:33:44:01
+
+ip netns exec arping_test0 ip a a 192.0.2.100/24 dev veth0
+ip netns exec arping_test1 ip a a 192.0.2.101/24 dev veth1
+
+run_test() {
+    NAME="$1"
+    shift
+    ECODE="$1"
+    shift
+
+    echo "-----------------------------"
+    echo "     Test: ${NAME?}"
+    echo "-----------------------------"
+    
+    
+    CAP="$(mktemp)"
+    ip netns exec arping_test1 \
+       tcpdump \
+       -s0 \
+       -nlpi veth1 \
+       --immediate-mode \
+       -w "${CAP?}" arp \
+       2>/dev/null &
+    PID=$!
+
+    # Run arping.
+    set +e
+    # TODO: test that errors go to stderr.
+    OUT="$(ip netns exec arping_test0 ./src/arping -W0.05 "$@" 2>&1)"
+    E=$?
+    set -e
+
+    if [[ ! $ECODE = $E ]]; then
+	echo "FAIL: wrong exit code ${E?}, want ${ECODE?}"
+	echo "Output:"
+	echo "---"
+	echo "${OUT?}"
+	exit 1
+    fi
+
+    if ! echo "${OUT?}" | tests/regmatch.py "tests/${NAME?}.out"; then
+	echo "FAIL: wrong output:"
+	echo "----"
+	echo "${OUT?}"
+	echo "${OUT?}" > a
+	echo "---- Should match -----"
+	cat "tests/${NAME?}.out"
+	exit 1
+    fi
+    
+    sleep 0.05
+    kill -INT "${PID?}"
+    wait "${PID?}"
+
+    TXT="$(mktemp)"
+    chown root:root "${CAP?}"
+    tcpdump -txnlpr "${CAP?}" 2>/dev/null > "${TXT?}"
+    diff -Nu "tests/${NAME?}.cap" "${TXT?}" || (echo "FAIL ${TXT?}"; exit 1)
+    rm "${CAP?}"
+}
+
+cleanup() {
+    ip netns del arping_test0 || true
+    ip netns del arping_test1 || true
+}    
+
+# Usage stuff.
+run_test "no_args"     1
+run_test "h"           0 -h
+run_test "help"        0 --help
+
+# Simple examples.
+run_test "simple"      0 -c 1 192.0.2.101
+run_test "no_reply"    1 -c 1 192.0.2.1
+
+# TODO: ping mac address.
+
+# -0
+run_test "simple0"     0 -c 1 -0 192.0.2.101
+
+# TODO: -a
+# TODO: -A
+# TODO: -b
+# TODO: -B
+
+# -c
+run_test "simple3"     0 -c  3 192.0.2.101
+run_test "bad_count"   1 -c -1 192.0.2.101
+
+# TODO: -C
+# TODO: -d
+# TODO: -D
+# TODO: -e
+# TODO: -F
+# TODO: -g
+# TODO: -i
+# TODO: -m
+# TODO: -p
+# TODO: -P
+# TODO: -q
+# TODO: -Q
+
+run_test "reply"             1 -c 1 -P    192.0.2.101
+run_test "unsolicited_reply" 1 -c 1 -P -U 192.0.2.101
+
+# TODO: -R
+# TODO: -s
+# TODO: -S
+# TODO: -t
+# TODO: -T
+# TODO: -u
+
+run_test "unsolicited"       0 -c 1 -U 192.0.2.101
+
+# TODO: -v
+# TODO: -V
+# TODO: -w
+# TODO: -W
+# TODO: -z
+# TODO: -Z
+
+cleanup
+
+echo "All OK"

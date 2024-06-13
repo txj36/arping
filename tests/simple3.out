@@ -1,0 +1,8 @@
+ARPING 192[.]0[.]2[.]101
+42 bytes from 00:01:02:33:44:01 \(192[.]0[.]2[.]101\): index=0 time=\d+[.]\d+ usec
+42 bytes from 00:01:02:33:44:01 \(192[.]0[.]2[.]101\): index=1 time=\d+[.]\d+ usec
+42 bytes from 00:01:02:33:44:01 \(192[.]0[.]2[.]101\): index=2 time=\d+[.]\d+ usec
+
+--- 192[.]0[.]2[.]101 statistics ---
+3 packets transmitted, 3 packets received,   0% unanswered \(0 extra\)
+rtt min/avg/max/std-dev = 0.\d+/0.\d+/0.\d+/0.\d+ ms

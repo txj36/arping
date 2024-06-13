@@ -1,0 +1,5 @@
+ARPING 192[.]0[.]2[.]1
+Timeout
+
+--- 192[.]0[.]2[.]1 statistics ---
+1 packets transmitted, 0 packets received, 100% unanswered \(0 extra\)
