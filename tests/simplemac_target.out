@@ -1,0 +1,6 @@
+ARPING 00:01:02:33:44:01
+62 bytes from 192[.]0[.]2[.]101 \(00:01:02:33:44:01\): icmp_seq=0 time=\d+[.]\d+ usec
+
+--- 00:01:02:33:44:01 statistics ---
+1 packets transmitted, 1 packets received,   0% unanswered \(0 extra\)
+rtt min/avg/max/std-dev = 0[.]\d+/0[.]\d+/0[.]\d+/0[.]000 ms

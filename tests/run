@@ -44,12 +44,14 @@ run_test() {
     
     
     CAP="$(mktemp)"
+    # TODO: in the future also capture icmp. But we need regex matching for that.
     ip netns exec arping_test1 \
        tcpdump \
        -s0 \
        -nlpi veth1 \
        --immediate-mode \
-       -w "${CAP?}" arp \
+       -w "${CAP?}" \
+       arp \
        2>/dev/null &
     PID=$!
 
@@ -100,10 +102,18 @@ run_tests() {
     run_test "h"           0 -h
     run_test "help"        0 --help
 
-    # Simple examples.
+    # Simple IP examples.
     run_test "simple"              0 -c 1 192.0.2.101
     run_test "simple_verbose"      0 -v -c 1 192.0.2.101
     run_test "no_reply"            1 -c 1 192.0.2.1
+
+    # Simple MAC examples.
+    run_test "simplemac_timeout"   1 -c 1 -i veth0 00:01:02:33:44:01
+    run_test "simplemac_target"    0 -c 1 -T 192.0.2.101 00:01:02:33:44:01
+
+    ip netns exec arping_test1 sysctl -w net.ipv4.icmp_echo_ignore_broadcasts=0
+    run_test "simplemac_noignore"    0 -c 1 -i veth0 00:01:02:33:44:01
+    ip netns exec arping_test1 sysctl -w net.ipv4.icmp_echo_ignore_broadcasts=1
 
     # TODO: ping mac address.
 

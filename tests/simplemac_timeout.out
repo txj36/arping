@@ -1,0 +1,5 @@
+ARPING 00:01:02:33:44:01
+Timeout
+
+--- 00:01:02:33:44:01 statistics ---
+1 packets transmitted, 0 packets received, 100% unanswered \(0 extra\)
