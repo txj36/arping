@@ -1849,7 +1849,8 @@ ping_recv(pcap_t *pcap, uint32_t packetwait, pcap_handler func)
 
        if (send_reply) {
                if (verbose > 3) {
-                       printf("arping: sending replies. Waiting %d us…\n");
+                       printf("arping: sending replies. Waiting %ld us…\n",
+                              (long)packetwait);
                }
                usleep(packetwait);
                return;
