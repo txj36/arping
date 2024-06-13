@@ -124,10 +124,10 @@ cleanup() {
 }    
 
 run_tests() {
-        # Usage stuff.
-    run_test "no_args"     1
-    run_test "h"           0 -h
-    run_test "help"        0 --help
+    # Usage stuff.
+    run_test -t "no_args"     1
+    run_test -t "h"           0 -h
+    run_test -t "help"        0 --help
 
     # Simple IP examples.
     run_test "simple"              0 -c 1 192.0.2.101
