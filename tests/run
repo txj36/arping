@@ -56,7 +56,7 @@ run_test() {
     PID=$!
 
     # wait for tcpdump to wake up.
-    sleep 10
+    sleep "${SLEEP?}"
 
     # Run arping.
     set +e
@@ -77,16 +77,15 @@ run_test() {
 	echo "FAIL: wrong output:"
 	echo "----"
 	echo "${OUT?}"
-	echo "${OUT?}" > a
+	#echo "${OUT?}" > a
 	echo "---- Should match -----"
 	cat "tests/${NAME?}.out"
 	exit 1
     fi
-    
-    sleep 10
+
+    # Wait for tcpdump to see the packets.
+    sleep "${SLEEP?}"
     kill -INT "${PID?}"
-    sleep 10
-    kill -9 "${PID?}" || true
     wait "${PID?}" || true
 
     TXT="$(mktemp)"
@@ -170,6 +169,7 @@ run_tests() {
 
 main() {
     cd "$(dirname $0)/.."
+    SLEEP="${1:-0.1}"
     setup
 
     run_tests
@@ -178,4 +178,4 @@ main() {
     echo "All OK"
 }
 
-main
+main "$@"

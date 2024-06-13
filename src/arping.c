@@ -427,7 +427,7 @@ drop_fs_root()
         struct passwd *pw;
         errno = 0;
         if (!(pw = getpwnam(chroot_user))) {
-                if (verbose) {
+                if (verbose > 1) {
                         printf("arping: getpwnam(%s): %s\n",
                                chroot_user, strerror(errno));
                 }

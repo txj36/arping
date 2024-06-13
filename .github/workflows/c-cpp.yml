@@ -38,4 +38,4 @@ jobs:
     - name: make distcheck with optional deps
       run:  make distcheck
     - name: end to end tests
-      run:  sudo bash -x ./tests/run
+      run:  sudo bash -x ./tests/run 10
