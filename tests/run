@@ -52,7 +52,7 @@ run_test() {
        --immediate-mode \
        -w "${CAP?}" \
        arp \
-       2>/dev/null &
+       &
     PID=$!
 
     # Run arping.
