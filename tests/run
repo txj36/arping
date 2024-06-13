@@ -32,6 +32,12 @@ setup() {
     ip netns exec arping_test1 ip a a 192.0.2.101/24 dev veth1
 }
 
+#
+# Run tests.
+# run_test [ -t ] [ -i ] <test name> <arping options…>
+#
+#   -t    Skip capturing packets
+#   -i    Set net.ipv4.icmp_echo_ignore_broadcasts=0
 run_test() {
     setup
 
