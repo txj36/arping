@@ -82,6 +82,8 @@ run_test() {
     
     sleep 0.05
     kill -INT "${PID?}"
+    sleep 0.1
+    kill -9 "${PID?}" || true
     wait "${PID?}"
 
     TXT="$(mktemp)"
