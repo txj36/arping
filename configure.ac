@@ -35,6 +35,45 @@ AC_DEFUN([CHECK_COMPILER_OPTION], [
 
 CHECK_COMPILER_OPTION([-std=c99])
 
+# Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS([\
+arpa/inet.h \
+getopt.h \
+netinet/in.h \
+seccomp.h \
+stdlib.h \
+sys/socket.h \
+time.h \
+grp.h \
+sys/time.h \
+sys/types.h \
+sys/param.h \
+sys/capability.h \
+stdint.h \
+libnet.h \
+win32/libnet.h \
+sys/random.h \
+net/bpf.h \
+pwd.h \
+unistd.h])
+
+# Workaround for Android apparently having the header, and having the library
+# function, but not having the declaration in sys/random.h.
+# See issue #49 and #57.
+AC_MSG_CHECKING([if system actually has getrandom])
+AC_LINK_IFELSE(
+  [AC_LANG_PROGRAM(
+    [#include<sys/random.h>],
+    [ssize_t n = getrandom((void*)0, 16, 0)]
+  )],
+  [
+   AC_MSG_RESULT(yes)
+   AC_DEFINE([ACTUALLY_HAS_GETRANDOM], [1], [Actually has getrandom()])
+  ],
+  [AC_MSG_RESULT(no)]
+)
+
 # Checks for libraries.
 AC_CHECK_LIB([m], [sqrt])
 AC_CHECK_LIB([socket], [socket])
@@ -60,28 +99,6 @@ AC_ARG_ENABLE([seccomp], [Enable seccomp priv drops by default (-z to turn on, -
 ], [
    AC_DEFINE([DEFAULT_SECCOMP], [0], [Disable seccomp by default])
 ])
-# Checks for header files.
-AC_HEADER_STDC
-AC_CHECK_HEADERS([\
-arpa/inet.h \
-getopt.h \
-netinet/in.h \
-seccomp.h \
-stdlib.h \
-sys/socket.h \
-time.h \
-grp.h \
-sys/time.h \
-sys/types.h \
-sys/param.h \
-sys/capability.h \
-stdint.h \
-libnet.h \
-win32/libnet.h \
-sys/random.h \
-net/bpf.h \
-pwd.h \
-unistd.h])
 
 # Libnet include file is not optional
 if test ! x$ac_cv_header_libnet_h = xyes; then

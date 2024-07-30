@@ -15,7 +15,7 @@
  *
  */
 /*
- *  Copyright (C) 2000-2022 Thomas Habets <thomas@habets.se>
+ *  Copyright (C) 2000-2024 Thomas Habets <thomas@habets.se>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -382,7 +382,7 @@ parse_ulong(const char* in, const char* what, char* ebuf, size_t ebuflen)
 static ssize_t
 xgetrandom(void *buf, const size_t buflen, const unsigned int flags)
 {
-#ifdef HAVE_GETRANDOM
+#ifdef ACTUALLY_HAVE_GETRANDOM
         return getrandom(buf, buflen, flags);
 #else
         UNUSED(flags);
