@@ -499,7 +499,7 @@ drop_uid(uid_t uid, gid_t gid)
 static void
 drop_capabilities()
 {
-#if HAVE_CAP_INIT
+#ifdef ACTUALLY_HAVE_CAP_INIT
         cap_t no_cap;
         if (!(no_cap = cap_init())) {
                 if (verbose) {
