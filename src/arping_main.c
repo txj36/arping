@@ -20,15 +20,14 @@
 #include "config.h"
 #endif
 
-#include"arping.h"
+#include "arping.h"
 
 /**
  * main() wrapping arping_main() for testing purposes.
  */
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-        return arping_main(argc, argv);
+    return arping_main(argc, argv);
 }
 /* ---- Emacs Variables ----
  * Local Variables:
